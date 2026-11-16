@@ -19,7 +19,7 @@ and lets the user pick the colour scheme.
 | `lib/ui/editor.dart` | The text area of a tab. |
 | `lib/ui/settings_dialog.dart` | Settings dialog and the custom colour picker. |
 | `scripts/install.ps1` | Per-user install and file-type registration (`-Uninstall` removes it). |
-| `scripts/make_icon.ps1` | Regenerates `windows/runner/resources/app_icon.ico`. |
+| `scripts/make_icon.ps1` | Regenerates `windows/runner/resources/app_icon.ico` and `document.ico` (the icon of files opened with Mellow: a page with the app badge top-left; `install.ps1` copies it next to the exe and sets it as `DefaultIcon` of both `Mellow.Text` and `Applications\mellow.exe`; the latter is what Windows records when Mellow is picked via "Open with" or Settings, and it is also what puts Mellow in the "Open with" list. Run `install.ps1` from a normal terminal: when launched from the Claude desktop app its HKCU writes are invisible to Explorer). |
 | `test/` | Unit tests for encodings and the workspace. |
 | `integration_test/app_test.dart` | End-to-end test that drives the real window. |
 
