@@ -3,8 +3,10 @@
 # Windows itself decides the default app: this script only makes Mellow selectable.
 # Run it from a normal terminal: processes started by some sandboxed hosts (e.g. the Claude
 # desktop app) get HKCU writes virtualized, so Explorer never sees the registration.
+# Works from the repository (uses the release build) and from an unpacked release zip, where
+# this script sits next to mellow.exe and document.ico.
 param(
-    [string]$Source = "$PSScriptRoot\..\build\windows\x64\runner\Release",
+    [string]$Source = $(if (Test-Path "$PSScriptRoot\mellow.exe") { $PSScriptRoot } else { "$PSScriptRoot\..\build\windows\x64\runner\Release" }),
     [string[]]$Extensions = @('.txt', '.log', '.ini', '.md', '.json'),
     [switch]$Uninstall
 )
@@ -36,7 +38,9 @@ New-Item -ItemType Directory -Force $target | Out-Null
 Copy-Item (Join-Path $Source '*') $target -Recurse -Force
 # Files opened with Mellow show a page with the app badge, not the bare app icon.
 $docIcon = Join-Path $target 'document.ico'
-Copy-Item "$PSScriptRoot\..\windows\runner\resources\document.ico" $docIcon -Force
+$iconSource = @("$Source\document.ico", "$PSScriptRoot\..\windows\runner\resources\document.ico") | Where-Object { Test-Path $_ } | Select-Object -First 1
+if (-not $iconSource) { throw 'document.ico not found next to mellow.exe or in windows\runner\resources.' }
+if ((Resolve-Path $iconSource).Path -ne $docIcon) { Copy-Item $iconSource $docIcon -Force }
 
 $link = (New-Object -ComObject WScript.Shell).CreateShortcut($shortcut)
 $link.TargetPath = $exe

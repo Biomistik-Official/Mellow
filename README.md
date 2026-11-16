@@ -80,8 +80,22 @@ zoom and a status bar. It also saves by itself and lets you pick its colours.
 
 ## Install
 
-Mellow has no prebuilt release yet. You need Windows 11 x64 (it's developed and tested there;
-Windows 10 may work but is untested), the
+### Download
+
+1. Download `Mellow-<version>-windows-x64.zip` from the
+   [latest release](https://github.com/Biomistik-Official/Mellow/releases/latest) and unpack it.
+2. In the unpacked folder, run:
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\install.ps1
+   ```
+
+Mellow is developed and tested on Windows 11 x64. Windows 10 may work but is untested. The
+build is not code-signed, so Windows SmartScreen may warn you the first time it starts.
+
+### Build from source
+
+You need the
 [Flutter SDK](https://docs.flutter.dev/get-started/install/windows/desktop), Visual Studio
 Build Tools with the C++ workload, and Windows Developer Mode turned on.
 
@@ -97,10 +111,11 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 registers Mellow for `.txt`, `.log`, `.ini`, `.md` and `.json`. Windows doesn't let an app make
 itself the default, so pick Mellow once in **Settings → Apps → Default apps**.
 
-To remove Mellow, run:
+To remove Mellow, run the same script with `-Uninstall` (from the unpacked release folder, or
+from `scripts\` in a clone):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -Uninstall
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Uninstall
 ```
 
 Your settings and drafts stay in `%APPDATA%\Mellow`.
