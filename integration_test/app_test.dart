@@ -95,6 +95,17 @@ void main() {
     await chord(LogicalKeyboardKey.tab);
     expect(ws.current.fileName, 'a.txt');
 
+    // The pin button keeps the real window above others and lets it go again.
+    expect(await windowManager.isAlwaysOnTop(), isFalse);
+    await t.tap(find.byTooltip(L.t('pinOnTop')));
+    await t.pumpAndSettle();
+    expect(await windowManager.isAlwaysOnTop(), isTrue);
+    expect(find.byIcon(Icons.push_pin_rounded), findsOneWidget);
+    await t.tap(find.byTooltip(L.t('unpinOnTop')));
+    await t.pumpAndSettle();
+    expect(await windowManager.isAlwaysOnTop(), isFalse);
+    expect(find.byIcon(Icons.push_pin_outlined), findsOneWidget);
+
     // Menus open and run their actions.
     await t.tap(find.text(L.t('view')));
     await t.pumpAndSettle();

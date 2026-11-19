@@ -36,6 +36,7 @@ class _HomeState extends State<Home> with WindowListener {
   bool _matchCase = false;
   bool _ctrl = false;
   bool _maximized = false;
+  bool _alwaysOnTop = false;
   bool _closing = false;
   double _zoom = 1;
   Doc? _lastDoc;
@@ -523,7 +524,7 @@ class _HomeState extends State<Home> with WindowListener {
     return SizedBox(
       height: 46,
       child: LayoutBuilder(builder: (context, box) {
-        final tabsMax = (box.maxWidth - 10 - 40 - 60 - 3 * 46).clamp(80.0, double.infinity);
+        final tabsMax = (box.maxWidth - 10 - 40 - 60 - 4 * 46).clamp(80.0, double.infinity);
         return Row(
           children: [
             const SizedBox(width: 10),
@@ -541,6 +542,13 @@ class _HomeState extends State<Home> with WindowListener {
               onPressed: ws.newDoc,
             ),
             Expanded(child: DragToMoveArea(child: const SizedBox.expand())),
+            _caption(
+              _alwaysOnTop ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+              L.t(_alwaysOnTop ? 'unpinOnTop' : 'pinOnTop'),
+              _toggleAlwaysOnTop,
+              scheme,
+              active: _alwaysOnTop,
+            ),
             _caption(Icons.remove_rounded, L.t('minimize'), windowManager.minimize, scheme),
             _caption(
               _maximized ? Icons.filter_none_rounded : Icons.crop_square_rounded,
@@ -555,7 +563,14 @@ class _HomeState extends State<Home> with WindowListener {
     );
   }
 
-  Widget _caption(IconData icon, String tip, VoidCallback onTap, ColorScheme scheme, {bool danger = false}) {
+  Future<void> _toggleAlwaysOnTop() async {
+    final next = !_alwaysOnTop;
+    await windowManager.setAlwaysOnTop(next);
+    if (mounted) setState(() => _alwaysOnTop = next);
+  }
+
+  Widget _caption(IconData icon, String tip, VoidCallback onTap, ColorScheme scheme,
+      {bool danger = false, bool active = false}) {
     return SizedBox(
       width: 46,
       height: 46,
@@ -565,7 +580,11 @@ class _HomeState extends State<Home> with WindowListener {
         child: Tooltip(
           message: tip,
           waitDuration: const Duration(milliseconds: 700),
-          child: Icon(icon, size: icon == Icons.filter_none_rounded ? 14 : 18, color: scheme.onSurfaceVariant),
+          child: Icon(
+            icon,
+            size: icon == Icons.filter_none_rounded ? 14 : (icon == Icons.push_pin_rounded || icon == Icons.push_pin_outlined ? 16 : 18),
+            color: active ? scheme.primary : scheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
