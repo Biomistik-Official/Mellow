@@ -15,13 +15,14 @@ and lets the user pick the colour scheme.
 | `lib/encoding.dart` | Detection and writing of UTF-8, UTF-8 BOM, UTF-16 LE/BE, Windows-1251, and line endings. |
 | `lib/settings.dart` | `AppSettings` (JSON in the data folder), colour palette, font list, Windows accent colour. |
 | `lib/l10n.dart` | Russian and English interface strings. |
+| `lib/updater.dart` | Self-update from GitHub Releases; `kAppVersion` must match `pubspec.yaml` (a test checks). |
 | `lib/ui/home.dart` | Main screen: title bar with tabs, menus, find bar, status bar, shortcuts. |
 | `lib/ui/editor.dart` | The text area of a tab. |
 | `lib/ui/settings_dialog.dart` | Settings dialog and the custom colour picker. |
 | `scripts/install.ps1` | Per-user install and file-type registration (`-Uninstall` removes it). |
 | `scripts/make_icon.ps1` | Regenerates `windows/runner/resources/app_icon.ico` and `document.ico` (the icon of files opened with Mellow: a page with the app badge top-left; `install.ps1` copies it next to the exe and sets it as `DefaultIcon` of both `Mellow.Text` and `Applications\mellow.exe`; the latter is what Windows records when Mellow is picked via "Open with" or Settings, and it is also what puts Mellow in the "Open with" list. Run `install.ps1` from a normal terminal: when launched from the Claude desktop app its HKCU writes are invisible to Explorer). |
 | `docs/screenshots/` | Screenshots used by `README.md` (taken with a separate `MELLOW_DATA_DIR` and demo files). |
-| `test/` | Unit tests for encodings and the workspace. |
+| `test/` | Unit tests for encodings, the workspace and the updater. `updater_network_test.dart` downloads the real latest release and installs it into a temp folder; it runs only with `MELLOW_NETWORK_TESTS=1`. |
 | `integration_test/app_test.dart` | End-to-end test that drives the real window. |
 
 ## Behaviour worth knowing
@@ -39,6 +40,18 @@ and lets the user pick the colour scheme.
   its tabs to the main window when it closes.
 - **In memory, text always uses `\n`.** Line endings are converted on read and write.
 - `MELLOW_DATA_DIR` overrides the data folder (used for testing).
+- **Auto-update.** Only the main window of the installed copy
+  (`%LOCALAPPDATA%\Programs\Mellow\mellow.exe`) updates; dev builds never do. It asks
+  `api.github.com/repos/Biomistik-Official/Mellow/releases/latest` 5 seconds after launch and
+  every 6 hours, and downloads the `*-windows-x64.zip` asset of a newer, non-draft,
+  non-prerelease tag to `%TEMP%\Mellow-update`. A snackbar then offers a restart; closing
+  Mellow installs it as well. Installing writes `apply-update.ps1` and a `.vbs` launcher
+  there and starts them through `wscript` (a detached PowerShell started from Dart has no
+  console and may not start). The script waits for every `mellow.exe` from the install folder
+  to exit (up to 10 minutes), unpacks the zip over it and logs to `update.log`. Registry and
+  shortcuts are not touched. **A release must bump `version:` in `pubspec.yaml` and
+  `kAppVersion`, and its tag must be `v<version>` with the zip attached.**
+- **Keep on top.** The pin button in the title bar toggles `setAlwaysOnTop`; it is not saved.
 - **Window setup.** The app draws its own title bar (`TitleBarStyle.hidden`). `setUpWindow()`
   in `lib/main.dart` retries the `window_manager` setup until `windowManager.getId() != 0`,
   first briefly before `runApp`, then on a background timer; otherwise the calls silently

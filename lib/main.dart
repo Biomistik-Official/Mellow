@@ -8,6 +8,7 @@ import 'instance.dart';
 import 'l10n.dart';
 import 'settings.dart';
 import 'ui/home.dart';
+import 'updater.dart';
 import 'workspace.dart';
 
 Future<void> main(List<String> args) async {
@@ -55,7 +56,11 @@ Future<void> main(List<String> args) async {
     });
   }
 
-  runApp(MellowApp(settings: settings, ws: ws));
+  // Only the main window of the installed copy looks for updates.
+  final updater = newWindow ? null : Updater.forThisProcess();
+  updater?.start();
+
+  runApp(MellowApp(settings: settings, ws: ws, updater: updater));
 }
 
 bool _windowReady = false;
@@ -100,10 +105,11 @@ Future<void> setUpWindow(AppSettings settings, {required bool restoreBounds}) as
 }
 
 class MellowApp extends StatelessWidget {
-  const MellowApp({super.key, required this.settings, required this.ws});
+  const MellowApp({super.key, required this.settings, required this.ws, this.updater});
 
   final AppSettings settings;
   final Workspace ws;
+  final Updater? updater;
 
   ThemeData _theme(Brightness brightness) {
     final seed = settings.effectiveSeed;
@@ -171,7 +177,7 @@ class MellowApp extends StatelessWidget {
           locale: Locale(L.lang),
           supportedLocales: const [Locale('ru'), Locale('en')],
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
-          home: Home(settings: settings, ws: ws),
+          home: Home(settings: settings, ws: ws, updater: updater),
         );
       },
     );

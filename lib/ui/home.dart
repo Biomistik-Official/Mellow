@@ -11,15 +11,17 @@ import '../encoding.dart';
 import '../instance.dart';
 import '../l10n.dart';
 import '../settings.dart';
+import '../updater.dart';
 import '../workspace.dart';
 import 'editor.dart';
 import 'settings_dialog.dart';
 
 class Home extends StatefulWidget {
-  const Home({super.key, required this.settings, required this.ws});
+  const Home({super.key, required this.settings, required this.ws, this.updater});
 
   final AppSettings settings;
   final Workspace ws;
+  final Updater? updater;
 
   @override
   State<Home> createState() => _HomeState();
@@ -54,6 +56,7 @@ class _HomeState extends State<Home> with WindowListener {
       if (mounted) setState(() => _maximized = v);
     });
     ws.addListener(_onWorkspace);
+    widget.updater?.addListener(_onUpdateReady);
     ws.onError = _showError;
     ws.onTextChanged = (d) {
       if (_findOpen && d == doc) Future.microtask(() => _recompute(jump: false));
@@ -63,6 +66,7 @@ class _HomeState extends State<Home> with WindowListener {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       doc.focus.requestFocus();
       _updateTitle();
+      _onUpdateReady();
     });
   }
 
@@ -71,6 +75,7 @@ class _HomeState extends State<Home> with WindowListener {
     windowManager.removeListener(this);
     HardwareKeyboard.instance.removeHandler(_onKey);
     ws.removeListener(_onWorkspace);
+    widget.updater?.removeListener(_onUpdateReady);
     _findCtl.dispose();
     _replCtl.dispose();
     _findFocus.dispose();
@@ -123,6 +128,28 @@ class _HomeState extends State<Home> with WindowListener {
     );
   }
 
+  String? _announcedUpdate;
+
+  /// A newer release is downloaded: offer a restart. Closing Mellow installs it too.
+  void _onUpdateReady() {
+    final v = widget.updater?.readyVersion;
+    if (!mounted || v == null || v == _announcedUpdate) return;
+    _announcedUpdate = v;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('${L.t('updateReady')} $v'),
+      width: 460,
+      duration: const Duration(hours: 1),
+      showCloseIcon: true,
+      action: SnackBarAction(label: L.t('restart'), onPressed: _restartForUpdate),
+    ));
+  }
+
+  Future<void> _restartForUpdate() async {
+    if (await widget.updater?.launchInstaller(relaunch: true) ?? false) {
+      await windowManager.close();
+    }
+  }
+
   // ---- window ----------------------------------------------------------
 
   @override
@@ -137,6 +164,8 @@ class _HomeState extends State<Home> with WindowListener {
       }
     } else {
       settings.saveNow();
+      // No-op when the restart button already started the installer.
+      await widget.updater?.launchInstaller(relaunch: false);
     }
     await windowManager.destroy();
   }

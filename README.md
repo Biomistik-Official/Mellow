@@ -29,6 +29,9 @@ zoom and a status bar. It also saves by itself and lets you pick its colours.
 - **One window, many launches.** Opening a file while Mellow is already running adds a tab to
   the existing window. *File → New window* opens a second, independent window.
 - **Its own file icon.** Files opened with Mellow get a document icon with the Mellow badge.
+- **Keep on top.** The pin button next to Minimize keeps the window above other apps.
+- **Automatic updates.** The installed copy checks GitHub Releases at launch and every 6 hours,
+  downloads a new version in the background and installs it when you restart or close Mellow.
 - **English and Russian interface**, chosen automatically from the system language or set by
   hand.
 
